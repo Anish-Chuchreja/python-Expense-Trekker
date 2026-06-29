@@ -13,6 +13,7 @@ A command-line Expense Tracker built with Python to help users manage daily expe
 - 💸 Budget alerts
 - 📄 Export expenses to CSV
 - 💾 Persistent storage using JSON
+- 🤑 Set and view Pocket money limit
 
 ## 🛠️ Technologies Used
 
