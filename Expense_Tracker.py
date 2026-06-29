@@ -9,6 +9,7 @@ Features:
   - Budget alerts
   - Export to CSV
   - Persistent storage (JSON file)
+  - Pocket Money tracker            ★ NEW
 ========================================
 """
 
@@ -40,8 +41,18 @@ def load_data() -> dict:
     """Load expenses and settings from the JSON data file."""
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r") as f:
-            return json.load(f)
-    return {"expenses": [], "budget": 0.0, "next_id": 1}
+            data = json.load(f)
+        # ── Backward-compatibility: inject pocket_money keys if absent ──
+        data.setdefault("pocket_money", 0.0)
+        data.setdefault("pocket_spent", 0.0)
+        return data
+    return {
+        "expenses":     [],
+        "budget":       0.0,
+        "next_id":      1,
+        "pocket_money": 0.0,   # ★ NEW – cash you have in hand
+        "pocket_spent": 0.0,   # ★ NEW – running total deducted from pocket
+    }
 
 
 def save_data(data: dict) -> None:
@@ -129,7 +140,7 @@ def add_expense(data: dict) -> None:
 
     print(f"\n  ✓ Expense #{expense['id']} added successfully!")
 
-    # Budget alert
+    # ── Budget alert ──────────────────────────────────────────────────────────
     if data["budget"] > 0:
         month = date_str[:7]
         monthly_total = sum(
@@ -138,6 +149,18 @@ def add_expense(data: dict) -> None:
         if monthly_total > data["budget"]:
             print(f"\n  ⚠  BUDGET ALERT! Monthly spend ₹{monthly_total:,.2f}"
                   f" exceeds budget ₹{data['budget']:,.2f}")
+
+    # ── Pocket Money alert ★ NEW ──────────────────────────────────────────────
+    if data["pocket_money"] > 0:
+        data["pocket_spent"] = round(data["pocket_spent"] + amount, 2)
+        save_data(data)
+        pocket_left = round(data["pocket_money"] - data["pocket_spent"], 2)
+        if pocket_left >= 0:
+            print(f"\n  👛 Pocket Money left: ₹{pocket_left:,.2f}"
+                  f"  (spent ₹{data['pocket_spent']:,.2f} of ₹{data['pocket_money']:,.2f})")
+        else:
+            print(f"\n  ⚠  POCKET ALERT! You are ₹{abs(pocket_left):,.2f}"
+                  f" over your pocket money of ₹{data['pocket_money']:,.2f}")
 
     pause()
 
@@ -333,6 +356,124 @@ def category_summary(data: dict) -> None:
 
     pause()
 
+def set_pocket_money(data: dict) -> None:
+    """
+    ★ NEW — Set Pocket Money
+    ─────────────────────────────────────────────────────────────────────────
+    Records how much cash you currently have in your pocket / wallet.
+    Every expense you add will be deducted from this amount in real-time,
+    and you will receive a low-balance or over-limit alert automatically.
+
+    You can also reset the spent counter when you refill your wallet.
+    ─────────────────────────────────────────────────────────────────────────
+    """
+    header("👛 SET POCKET MONEY")
+
+    pocket      = data["pocket_money"]
+    spent       = data["pocket_spent"]
+    remaining   = round(pocket - spent, 2)
+
+    if pocket > 0:
+        print(f"  Current pocket money : ₹{pocket:,.2f}")
+        print(f"  Already spent        : ₹{spent:,.2f}")
+        status = "✓ Available" if remaining >= 0 else "✗ Overdrawn"
+        print(f"  Remaining            : ₹{abs(remaining):,.2f}  {status}")
+    else:
+        print("  No pocket money set yet.")
+
+    separator()
+    print("  1. Set / update pocket money amount")
+    print("  2. Reset spent counter (e.g. after refilling wallet)")
+    print("  3. Clear pocket money tracking")
+    print("  4. Back")
+    separator()
+
+    sub = input("  Choice: ").strip()
+
+    if sub == "1":
+        try:
+            amount = float(input("  Enter pocket money amount (₹): "))
+            if amount < 0:
+                raise ValueError
+            data["pocket_money"] = round(amount, 2)
+            # Ask whether to also reset the spent counter
+            reset = input("  Reset spent counter to ₹0? [y/N]: ").strip().lower()
+            if reset == "y":
+                data["pocket_spent"] = 0.0
+                print("  ✓ Spent counter reset to ₹0.")
+            save_data(data)
+            print(f"  ✓ Pocket money set to ₹{data['pocket_money']:,.2f}")
+        except ValueError:
+            print("  ✗ Invalid amount.")
+
+    elif sub == "2":
+        data["pocket_spent"] = 0.0
+        save_data(data)
+        print("  ✓ Spent counter reset. Pocket money cycle restarted.")
+
+    elif sub == "3":
+        confirm = input("  Clear all pocket money tracking? [y/N]: ").strip().lower()
+        if confirm == "y":
+            data["pocket_money"] = 0.0
+            data["pocket_spent"] = 0.0
+            save_data(data)
+            print("  ✓ Pocket money tracking cleared.")
+        else:
+            print("  Cancelled.")
+
+    pause()
+
+
+def pocket_money_status(data: dict) -> None:
+    """
+    ★ NEW — Pocket Money Status
+    ─────────────────────────────────────────────────────────────────────────
+    Displays a detailed breakdown of your pocket money: how much you started
+    with, how much has been spent, and what balance remains.  A visual
+    progress bar shows consumption at a glance.
+    ─────────────────────────────────────────────────────────────────────────
+    """
+    header("👛 POCKET MONEY STATUS")
+
+    pocket    = data["pocket_money"]
+    spent     = data["pocket_spent"]
+
+    if pocket <= 0:
+        print("  No pocket money set.")
+        print("  Go to  Option 9 → Set Pocket Money  to get started.")
+        pause()
+        return
+
+    remaining = round(pocket - spent, 2)
+    pct_spent = min((spent / pocket) * 100, 100) if pocket > 0 else 0
+    bar_fill  = int(pct_spent / 5)          # 20-block bar
+    bar_empty = 20 - bar_fill
+    bar       = "█" * bar_fill + "░" * bar_empty
+
+    separator()
+    print(f"\n  Total pocket money   : ₹{pocket:,.2f}")
+    print(f"  Spent so far         : ₹{spent:,.2f}")
+    separator()
+
+    if remaining >= 0:
+        print(f"  ✓ Remaining          : ₹{remaining:,.2f}")
+    else:
+        print(f"  ✗ Overdrawn by       : ₹{abs(remaining):,.2f}")
+
+    print(f"\n  Usage  [{bar}]  {pct_spent:.1f}%")
+    separator()
+
+    # Warn if more than 80 % spent
+    if pct_spent >= 100:
+        print("  ⚠  Pocket money fully exhausted!")
+    elif pct_spent >= 80:
+        print(f"  ⚠  Over 80 % spent — only ₹{remaining:,.2f} left!")
+    else:
+        print(f"  You still have ₹{remaining:,.2f} to spend freely.")
+
+    pause()
+
+
 # ── Main menu ─────────────────────────────────────────────────────────────────
 
 def main_menu(data: dict) -> None:
@@ -341,10 +482,20 @@ def main_menu(data: dict) -> None:
         header("💰 EXPENSE TRACKER")
 
         budget_line = f"₹{data['budget']:,.2f}" if data["budget"] else "Not set"
-        month = str(date.today())[:7]
+        month       = str(date.today())[:7]
         month_total = sum(e["amount"] for e in data["expenses"] if e["date"].startswith(month))
-        print(f"  Monthly Budget : {budget_line}")
-        print(f"  Spent this month: ₹{month_total:,.2f}")
+
+        # ── ★ NEW: pocket money summary line ──────────────────────────────
+        pocket      = data.get("pocket_money", 0.0)
+        pocket_left = round(pocket - data.get("pocket_spent", 0.0), 2) if pocket > 0 else None
+
+        print(f"  Monthly Budget   : {budget_line}")
+        print(f"  Spent this month : ₹{month_total:,.2f}")
+
+        if pocket_left is not None:
+            status = f"₹{pocket_left:,.2f} left" if pocket_left >= 0 else f"⚠ ₹{abs(pocket_left):,.2f} over!"
+            print(f"  👛 Pocket Money  : {status}  (of ₹{pocket:,.2f})")
+
         separator()
         print("  1. Add Expense")
         print("  2. View Expenses")
@@ -353,7 +504,9 @@ def main_menu(data: dict) -> None:
         print("  5. Category Breakdown")
         print("  6. Set Monthly Budget")
         print("  7. Export to CSV")
-        print("  8. Exit")
+        print("  8. Pocket Money Status   ★")   # ★ NEW
+        print("  9. Set Pocket Money      ★")   # ★ NEW
+        print("  0. Exit")
         separator()
 
         choice = input("  Your choice: ").strip()
@@ -379,7 +532,13 @@ def main_menu(data: dict) -> None:
         elif choice == "7":
             clear_screen()
             export_to_csv(data)
-        elif choice == "8":
+        elif choice == "8":                      # ★ NEW
+            clear_screen()
+            pocket_money_status(data)
+        elif choice == "9":                      # ★ NEW
+            clear_screen()
+            set_pocket_money(data)
+        elif choice == "0":
             print("\n  Goodbye! Keep tracking your expenses. 👋\n")
             break
         else:
