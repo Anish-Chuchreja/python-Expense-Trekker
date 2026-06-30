@@ -2,8 +2,8 @@
   "expenses": [],
   "budget": 2500,
   "next_id": 3,
-  "bank_balance": 25128.0,
-  "bank_name": "IDBI Bank",
+  "bank_balance": 2500.0,
+  "bank_name": "",
   "warning_limit": 2000,
   "pocket_money": 2000,
   "pocket_spent": 0
