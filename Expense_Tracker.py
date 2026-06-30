@@ -45,15 +45,24 @@ def load_data() -> dict:
         # ── Backward-compatibility: inject pocket_money keys if absent ──
         data.setdefault("pocket_money", 0.0)
         data.setdefault("pocket_spent", 0.0)
+        data.setdefault("bank_balance", 0.0)
+        data.setdefault("bank_name", "")
+        data.setdefault("warning_limit", 2000.0)
+        data.setdefault("bank_balance", 0.0)
+        data.setdefault("bank_balance", 0.0)
         return data
     return {
-        "expenses":     [],
-        "budget":       0.0,
-        "next_id":      1,
-        "pocket_money": 0.0,   # ★ NEW – cash you have in hand
-        "pocket_spent": 0.0,   # ★ NEW – running total deducted from pocket
-    }
+    "expenses": [],
+    "budget": 0.0,
+    "next_id": 1,
 
+    "bank_balance": 0.0,
+    "bank_name": "",
+    "warning_limit": 2000.0,
+
+    "pocket_money": 0.0,
+    "pocket_spent": 0.0,
+}
 
 def save_data(data: dict) -> None:
     """Persist the current data to the JSON file."""
@@ -136,19 +145,36 @@ def add_expense(data: dict) -> None:
     }
     data["expenses"].append(expense)
     data["next_id"] += 1
+
+# NEW
+    data["bank_balance"] -= amount
+
     save_data(data)
 
     print(f"\n  ✓ Expense #{expense['id']} added successfully!")
 
     # ── Budget alert ──────────────────────────────────────────────────────────
     if data["budget"] > 0:
-        month = date_str[:7]
-        monthly_total = sum(
-            e["amount"] for e in data["expenses"] if e["date"].startswith(month)
-        )
-        if monthly_total > data["budget"]:
-            print(f"\n  ⚠  BUDGET ALERT! Monthly spend ₹{monthly_total:,.2f}"
-                  f" exceeds budget ₹{data['budget']:,.2f}")
+
+      month = date_str[:7]
+
+    monthly_total = sum(
+        e["amount"]
+        for e in data["expenses"]
+        if e["date"].startswith(month)
+    )
+
+    warning = data["warning_limit"]
+
+    if monthly_total >= warning and monthly_total < data["budget"]:
+
+        print("\n⚠ WARNING")
+        print(f"You have spent ₹{monthly_total:,.2f}")
+        print(f"Remaining Budget : ₹{data['budget']-monthly_total:,.2f}")
+
+    elif monthly_total >= data["budget"]:
+
+        print("\n🚨 Budget Limit Reached!")
 
     # ── Pocket Money alert ★ NEW ──────────────────────────────────────────────
     if data["pocket_money"] > 0:
@@ -472,7 +498,25 @@ def pocket_money_status(data: dict) -> None:
         print(f"  You still have ₹{remaining:,.2f} to spend freely.")
 
     pause()
+def set_bank_balance(data):
+    header("BANK ACCOUNT")
 
+    print(f"\nCurrent Bank Balance : ₹{data['bank_balance']:,.2f}")
+
+    try:
+        amount = float(input("\nEnter Bank Balance (₹): "))
+        if amount < 0:
+            raise ValueError
+
+        data["bank_balance"] = amount
+        save_data(data)
+
+        print("\n✓ Bank balance updated successfully!")
+
+    except ValueError:
+        print("\n✗ Invalid amount.")
+
+    pause()
 
 # ── Main menu ─────────────────────────────────────────────────────────────────
 
@@ -491,6 +535,7 @@ def main_menu(data: dict) -> None:
 
         print(f"  Monthly Budget   : {budget_line}")
         print(f"  Spent this month : ₹{month_total:,.2f}")
+        print(f"  Bank Balance     : ₹{data['bank_balance']:,.2f}")
 
         if pocket_left is not None:
             status = f"₹{pocket_left:,.2f} left" if pocket_left >= 0 else f"⚠ ₹{abs(pocket_left):,.2f} over!"
@@ -505,7 +550,8 @@ def main_menu(data: dict) -> None:
         print("  6. Set Monthly Budget")
         print("  7. Export to CSV")
         print("  8. Pocket Money Status   ★")   # ★ NEW
-        print("  9. Set Pocket Money      ★")   # ★ NEW
+        print("  9. Set Pocket Money      ★")
+        print(" 10. Bank Account")
         print("  0. Exit")
         separator()
 
@@ -538,6 +584,10 @@ def main_menu(data: dict) -> None:
         elif choice == "9":                      # ★ NEW
             clear_screen()
             set_pocket_money(data)
+        elif choice == "10":
+            clear_screen()
+
+            set_bank_balance(data)
         elif choice == "0":
             print("\n  Goodbye! Keep tracking your expenses. 👋\n")
             break
