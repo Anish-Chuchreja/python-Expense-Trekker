@@ -1,19 +1,28 @@
 # 💰 Expense Tracker
 
-A command-line Expense Tracker built with Python to help users manage daily expenses efficiently. The application allows users to record, organize, analyze, and export financial data while storing it persistently using JSON.
+A feature-rich **Command Line Expense Tracker** built with **Python** that helps users efficiently manage their daily finances. The application enables users to record expenses, monitor spending, manage budgets, track bank balance and pocket money, and export financial records while storing all data locally using JSON.
 
-## 🚀 Features
+---
+
+## ✨ Features
 
 - ➕ Add new expenses
-- 📋 View all expenses
-- ✏️ Update existing expenses
+- 📋 View expenses with multiple filters
 - 🗑️ Delete expenses
 - 🏷️ Category-wise expense tracking
 - 📅 Monthly expense summary
-- 💸 Budget alerts
+- 📊 Category-wise spending breakdown
+- 💸 Set and manage monthly budget
+- ⚠️ Custom budget warning notifications
+- 🏦 Bank balance management
+- 💳 Automatic bank balance deduction after every expense
+- 👛 Pocket money management
+- 📈 Pocket money usage tracker
 - 📄 Export expenses to CSV
-- 💾 Persistent storage using JSON
-- 🤑 Set and view Pocket money limit
+- 💾 Persistent data storage using JSON
+- 🖥️ User-friendly command-line interface
+
+---
 
 ## 🛠️ Technologies Used
 
@@ -24,66 +33,135 @@ A command-line Expense Tracker built with Python to help users manage daily expe
 - Collections Module
 - OS Module
 
+---
+
 ## 📂 Project Structure
 
-```
+```text
 Expense-Tracker/
-│── Expense_Tracker.py
-│── expenses.json
-│── README.md
+│
+├── Expense_Tracker.py      # Main application
+├── expenses.json           # Stores all expenses and settings
+├── README.md               # Project documentation
 ```
 
-## ▶️ Getting Started
+---
 
-### Clone the repository
+## 🚀 Installation
+
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/Anish-Chuchreja/python-Expense-Trekker.git
 ```
 
-### Navigate to the project
+### 2. Navigate to the project folder
 
 ```bash
 cd python-Expense-Trekker
 ```
 
-### Run the application
+### 3. Run the application
 
 ```bash
 python Expense_Tracker.py
 ```
 
-## 📸 Demo
+---
 
-You can add screenshots or a GIF of the application here.
+## 📖 How It Works
+
+The application allows you to:
+
+- Record daily expenses
+- Organize expenses by category
+- View monthly spending summaries
+- Set a monthly budget
+- Receive spending alerts before exceeding your budget
+- Track your available bank balance
+- Automatically deduct expenses from your bank balance
+- Manage and monitor pocket money
+- Export all expense records to a CSV file
+
+---
+
+## 📸 Screenshots
+
+### Main Menu
+
+> *(Add screenshot here)*
+
+### Monthly Summary
+
+> *(Add screenshot here)*
+
+### Bank Balance Dashboard
+
+> *(Add screenshot here)*
+
+### Pocket Money Tracker
+
+> *(Add screenshot here)*
+
+---
 
 ## 🎯 Future Improvements
 
-- GUI using Tkinter or PyQt
-- Database integration (SQLite/MySQL)
-- User authentication
-- Data visualization with charts
-- Web version using Flask or Django
+- 🎨 Modern GUI using CustomTkinter
+- 🗄️ SQLite/MySQL database integration
+- 👤 User authentication
+- 📊 Interactive charts and analytics
+- 📑 PDF report generation
+- ☁️ Cloud backup & synchronization
+- 🌐 Web application using Flask or Django
+- 📱 Mobile application
+- 🏦 Official banking API integration (where supported)
+
+---
 
 ## 🤝 Contributing
 
-Contributions, suggestions, and improvements are welcome.
+Contributions are welcome!
 
 1. Fork the repository
-2. Create a new branch
+2. Create a feature branch
+
+```bash
+git checkout -b feature-name
+```
+
 3. Commit your changes
-4. Open a Pull Request
+
+```bash
+git commit -m "Add new feature"
+```
+
+4. Push your branch
+
+```bash
+git push origin feature-name
+```
+
+5. Open a Pull Request
+
+---
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the **MIT License**.
+
+---
 
 ## 👨‍💻 Author
 
 **Anish Chuchreja**
 
-- GitHub: https://github.com/Anish-Chuchreja
+GitHub: https://github.com/Anish-Chuchreja
 
 ---
 
-⭐ If you found this project useful, consider giving it a star!
+## ⭐ Support
+
+If you found this project useful, please consider giving it a **⭐ Star** on GitHub. It helps others discover the project and motivates future improvements.
+
+Thank you for your support! 🚀
